@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { response } = require("express");
 const express = require("express");
 const jwt = require("jsonwebtoken");
@@ -24,7 +25,7 @@ app.post("/api/signin", (request, response) => {
   if (user) {
     const accessToken = jwt.sign(
       { id: user.id, username: user.username },
-      "token"
+      process.env.JWT_SECRET
     );
     response.json({ username: user.username, accessToken });
   } else {
