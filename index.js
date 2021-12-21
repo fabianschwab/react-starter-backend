@@ -71,7 +71,7 @@ const verify = (request, response, next) => {
       }
       if (invalidAccessToken.includes(token)) {
         return response
-          .status(401)
+          .status(403)
           .json({ message: "Token is no longer valid." });
       } else {
         const user = getUser(signedUserPayload.id);
@@ -118,7 +118,7 @@ app.post("/api/refresh", (request, response) => {
   const refreshToken = request.body.refreshToken;
 
   if (!refreshToken) {
-    return response.status(400).json({ message: "RefreshToken is missing." });
+    return response.status(401).json({ message: "RefreshToken is missing." });
   }
   if (!refreshTokens.includes(refreshToken)) {
     return response.status(403).json({ message: "RefreshToken is not valid." });
