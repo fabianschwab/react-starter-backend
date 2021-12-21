@@ -1,9 +1,11 @@
 require("dotenv").config();
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 const users = [
   {
@@ -73,6 +75,15 @@ const invalidateRefreshTokensOfUser = (user) => {
 };
 
 /**
+ * Check if the refresh token is in the list of valid tokens
+ */
+const checkForExistingRefreshToken = (token) => {
+  return refreshTokens.find((entry) => {
+    return entry.refreshToken === token;
+  });
+};
+
+/**
  * Return full user details to given ID
  * TODO: export to user util class later on when stored in DB
  */
@@ -122,8 +133,10 @@ app.post("/api/signin", (request, response) => {
   });
 
   if (user) {
+    invalidateRefreshTokensOfUser(user);
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
     });
@@ -151,29 +164,26 @@ app.get("/api/logout", verify, (request, response) => {
 /**
  * Refresh SignIn: Endpoint for new token when accessToken is expired
  */
-app.post("/api/refresh", (request, response) => {
-  const refreshToken = request.body.refreshToken;
+app.get("/api/refresh", (request, response) => {
+  const refreshToken = request.cookies.refreshToken;
 
   if (!refreshToken) {
     return response.status(401).json({ message: "RefreshToken is missing." });
   }
-  if (!refreshTokens.includes(refreshToken)) {
+  if (!checkForExistingRefreshToken(refreshToken)) {
     return response.status(403).json({ message: "RefreshToken is not valid." });
   } else {
     jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (error, user) => {
       if (error) {
         return response.status(403).json({ message: "Refresh token expired." });
       } else {
-        invalidateRefreshToken(refreshToken);
-
+        invalidateRefreshTokensOfUser(user);
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
 
         response.cookie("refreshToken", newRefreshToken, { httpOnly: true });
 
-        response
-          .status(200)
-          .json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
+        response.status(200).json({ accessToken: newAccessToken });
       }
     });
   }
@@ -185,6 +195,7 @@ app.post("/api/refresh", (request, response) => {
 app.delete("/api/users/:userId", verify, (request, response) => {
   console.log(request.user);
 
+  console.log(refreshTokens);
   if (request.user.id === parseInt(request.params.userId)) {
     response.status(200).json({ message: "User has been deleted." });
   } else {
