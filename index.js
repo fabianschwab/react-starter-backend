@@ -66,13 +66,8 @@ const verify = (request, response, next) => {
   if (authHeader) {
     const token = authHeader.split(" ")[1];
     jwt.verify(token, process.env.JWT_SECRET, (error, signedUserPayload) => {
-      if (error) {
+      if (error || invalidAccessToken.includes(token)) {
         return response.status(403).json({ message: "Token is not valid." });
-      }
-      if (invalidAccessToken.includes(token)) {
-        return response
-          .status(403)
-          .json({ message: "Token is no longer valid." });
       } else {
         const user = getUser(signedUserPayload.id);
         request.user = user;
