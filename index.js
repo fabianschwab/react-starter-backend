@@ -139,6 +139,8 @@ app.post("/api/signin", (request, response) => {
 
     response.cookie("refreshToken", refreshToken, {
       httpOnly: true,
+      secure: process.env.HTTPS_COOKIE === "true",
+      maxAge: process.env.COOKIE_MAX_AGE,
     });
     response.json({ accessToken });
   } else {
