@@ -9,7 +9,7 @@
 			"name": "User Actions",
 			"item": [
 				{
-					"name": "Delete user",
+					"name": "Delete User",
 					"request": {
 						"method": "DELETE",
 						"header": [],
@@ -30,17 +30,8 @@
 				{
 					"name": "Logout",
 					"request": {
-						"method": "POST",
+						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"accessToken\" : \"{{authToken}}\",\n    \"refreshToken\" : \"{{refreshToken}}\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
 							"raw": "{{baseUrl}}/api/logout/",
 							"host": [
@@ -88,15 +79,14 @@
 			]
 		},
 		{
-			"name": "signin",
+			"name": "Signin",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();",
-							"pm.environment.set(\"authToken\",responseData.accessToken);",
-							"pm.environment.set(\"refreshToken\",responseData.refreshToken);"
+							"pm.environment.set(\"authToken\",responseData.accessToken);"
 						],
 						"type": "text/javascript"
 					}
@@ -128,32 +118,22 @@
 			"response": []
 		},
 		{
-			"name": "refresh signin",
+			"name": "Refresh Access Token",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();",
-							"pm.environment.set(\"authToken\",responseData.accessToken);",
-							"pm.environment.set(\"refreshToken\",responseData.refreshToken);"
+							"pm.environment.set(\"authToken\",responseData.accessToken);"
 						],
 						"type": "text/javascript"
 					}
 				}
 			],
 			"request": {
-				"method": "POST",
+				"method": "GET",
 				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"refreshToken\" :  \"{{refreshToken}}\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
 				"url": {
 					"raw": "{{baseUrl}}/api/refresh",
 					"host": [
