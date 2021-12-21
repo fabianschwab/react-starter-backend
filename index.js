@@ -100,7 +100,10 @@ app.post("/api/signin", (request, response) => {
   if (user) {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-    response.json({ accessToken, refreshToken });
+    response.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+    });
+    response.json({ accessToken });
   } else {
     response.status(400).json({ message: "Incorrect username or password." });
   }
