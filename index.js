@@ -40,8 +40,7 @@ const generateRefreshToken = (user) => {
   );
 
   // Saving refresh token, to invalidate them when user logs out.
-  refreshTokens.push({ user: user.username, refreshToken: token });
-
+  refreshTokens.push({ userId: user.id, refreshToken: token });
   return token;
 };
 
@@ -50,12 +49,32 @@ const generateRefreshToken = (user) => {
  * It is a list with blocked access tokens, till they are expired.
  */
 const invalidateAccessToken = (token) => {
-  invalidAccessToken.push(accessToken);
+  invalidAccessToken.push(token);
 };
+
+/**
+ * Invalidates refresh tokens for the user how is logging out.
+ *
+ * TODO: Fix the issue
+ *
+ * ! If once logged out all refresh tokens get removed.
+ *
+ * ! Side effect:
+ * ! Also "logged out" from different browsers and machines.
+ * ! Can't refresh access token.
+ *
+ * ? Solution cloud be:
+ * ? Logout is an endpoint which needs httpOnly cookie and invalidates this exact refresh token.
+ * ? Logouts for all Tabs cloud be realized on client side with global `localStorage` listener:
+ * ? When state `logout` is set, than trigger logout function.
+ */
+const invalidateRefreshTokensOfUser = (user) => {
+  refreshTokens = refreshTokens.filter((entry) => entry.userId !== user.id);
 };
 
 /**
  * Return full user details to given ID
+ * TODO: export to user util class later on when stored in DB
  */
 const getUser = (id) => {
   return users.find((user) => user.id === id);
@@ -115,6 +134,21 @@ app.post("/api/signin", (request, response) => {
 });
 
 /**
+ * Logout and invalidate access and refresh token
+ */
+app.get("/api/logout", verify, (request, response) => {
+  const authHeader = request.headers.authorization;
+  const accessToken = authHeader.split(" ")[1];
+
+  invalidateAccessToken(accessToken);
+  invalidateRefreshTokensOfUser(request.user);
+
+  response.cookie("refreshToken", "", { httpOnly: true });
+
+  return response.status(200).send({ message: "You logout successful." });
+});
+
+/**
  * Refresh SignIn: Endpoint for new token when accessToken is expired
  */
 app.post("/api/refresh", (request, response) => {
@@ -135,28 +169,13 @@ app.post("/api/refresh", (request, response) => {
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
 
+        response.cookie("refreshToken", newRefreshToken, { httpOnly: true });
+
         response
           .status(200)
           .json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
       }
     });
-  }
-});
-
-/**
- * Logout and invalidate all token
- */
-app.post("/api/logout", verify, (request, response) => {
-  const { refreshToken, accessToken } = request.body;
-
-  if (!refreshToken || !accessToken) {
-    return response
-      .status(400)
-      .json({ message: "RefreshToken or accessToken is missing." });
-  } else {
-    invalidateRefreshToken(refreshToken);
-    invalidAccessToken.push(accessToken);
-    return response.status(200).send({ message: "You logout successful." });
   }
 });
 
