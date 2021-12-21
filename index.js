@@ -28,8 +28,9 @@ const generateAccessToken = (user) => {
 };
 
 /**
- * Generates a refresh token for a given user and signs ID and username
- * This token can be used to get a new access token without login in again
+ * Generates a refresh token for a given user and signs ID and username.
+ * This token can be used to get a new access token without login in again.
+ * All generated refresh token will be saved, till they are expired or removed when a user logs out.
  */
 const generateRefreshToken = (user) => {
   const token = jwt.sign(
@@ -38,16 +39,19 @@ const generateRefreshToken = (user) => {
     { expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME }
   );
 
-  refreshTokens.push(token);
+  // Saving refresh token, to invalidate them when user logs out.
+  refreshTokens.push({ user: user.username, refreshToken: token });
 
   return token;
 };
 
 /**
- * Invalidates refresh tokens
+ * Invalidates access tokens:
+ * It is a list with blocked access tokens, till they are expired.
  */
-const invalidateRefreshToken = (refreshToken) => {
-  refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+const invalidateAccessToken = (token) => {
+  invalidAccessToken.push(accessToken);
+};
 };
 
 /**
@@ -58,7 +62,8 @@ const getUser = (id) => {
 };
 
 /**
- * Verify JWT middleware
+ * Verify JWT middleware:
+ * If access token is valid and not blocked because of a logout.
  */
 const verify = (request, response, next) => {
   const authHeader = request.headers.authorization;
