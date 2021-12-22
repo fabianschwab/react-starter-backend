@@ -86,7 +86,8 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();",
-							"pm.environment.set(\"authToken\",responseData.accessToken);"
+							"pm.environment.set(\"authToken\",responseData.accessToken);",
+							"pm.environment.set(\"refreshToken\",responseData.refreshToken);"
 						],
 						"type": "text/javascript"
 					}
@@ -125,15 +126,28 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();",
-							"pm.environment.set(\"authToken\",responseData.accessToken);"
+							"pm.environment.set(\"authToken\",responseData.accessToken);",
+							"pm.environment.set(\"refreshToken\",responseData.refreshToken);"
 						],
 						"type": "text/javascript"
 					}
 				}
 			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "{{baseUrl}}/api/refresh",
 					"host": [

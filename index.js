@@ -69,6 +69,8 @@ const invalidateAccessToken = (token) => {
  * ? Logout is an endpoint which needs httpOnly cookie and invalidates this exact refresh token.
  * ? Logouts for all Tabs cloud be realized on client side with global `localStorage` listener:
  * ? When state `logout` is set, than trigger logout function.
+ *
+ * * ADD issued add check to find the right token?
  */
 const invalidateRefreshTokensOfUser = (user) => {
   refreshTokens = refreshTokens.filter((entry) => entry.userId !== user.id);
@@ -84,14 +86,6 @@ const checkForExistingRefreshToken = (token) => {
 };
 
 /**
- * Return full user details to given ID
- * TODO: export to user util class later on when stored in DB
- */
-const getUser = (id) => {
-  return users.find((user) => user.id === id);
-};
-
-/**
  * Verify JWT middleware:
  * If access token is valid and not blocked because of a logout.
  */
@@ -100,11 +94,10 @@ const verify = (request, response, next) => {
 
   if (authHeader) {
     const token = authHeader.split(" ")[1];
-    jwt.verify(token, process.env.JWT_SECRET, (error, signedUserPayload) => {
+    jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
       if (error || invalidAccessToken.includes(token)) {
         return response.status(403).json({ message: "Token is not valid." });
       } else {
-        const user = getUser(signedUserPayload.id);
         request.user = user;
         next();
       }
@@ -133,16 +126,11 @@ app.post("/api/signin", (request, response) => {
   });
 
   if (user) {
-    invalidateRefreshTokensOfUser(user);
+    // invalidateRefreshTokensOfUser(user);
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    response.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.HTTPS_COOKIE === "true",
-      maxAge: process.env.COOKIE_MAX_AGE,
-    });
-    response.json({ accessToken });
+    response.json({ accessToken, refreshToken });
   } else {
     response.status(400).json({ message: "Incorrect username or password." });
   }
@@ -158,8 +146,6 @@ app.get("/api/logout", verify, (request, response) => {
   invalidateAccessToken(accessToken);
   invalidateRefreshTokensOfUser(request.user);
 
-  response.cookie("refreshToken", "", { httpOnly: true });
-
   return response.status(200).send({ message: "You logout successful." });
 });
 
@@ -167,7 +153,7 @@ app.get("/api/logout", verify, (request, response) => {
  * Refresh SignIn: Endpoint for new token when accessToken is expired
  */
 app.get("/api/refresh", (request, response) => {
-  const refreshToken = request.cookies.refreshToken;
+  const refreshToken = request.body.refreshToken;
 
   if (!refreshToken) {
     return response.status(401).json({ message: "RefreshToken is missing." });
@@ -183,9 +169,9 @@ app.get("/api/refresh", (request, response) => {
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
 
-        response.cookie("refreshToken", newRefreshToken, { httpOnly: true });
-
-        response.status(200).json({ accessToken: newAccessToken });
+        response
+          .status(200)
+          .json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
       }
     });
   }
@@ -197,7 +183,7 @@ app.get("/api/refresh", (request, response) => {
 app.delete("/api/users/:userId", verify, (request, response) => {
   console.log(request.user);
 
-  console.log(refreshTokens);
+  console.log(request.cookies.refreshToken);
   if (request.user.id === parseInt(request.params.userId)) {
     response.status(200).json({ message: "User has been deleted." });
   } else {
