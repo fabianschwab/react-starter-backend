@@ -139,7 +139,7 @@ app.post("/api/signin", (request, response) => {
 /**
  * Logout and invalidate access and refresh token
  */
-app.get("/api/logout", verify, (request, response) => {
+app.get("/api/signout", verify, (request, response) => {
   const authHeader = request.headers.authorization;
   const accessToken = authHeader.split(" ")[1];
 

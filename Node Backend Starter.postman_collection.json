@@ -33,13 +33,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/logout/",
+							"raw": "{{baseUrl}}/api/signout/",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"logout",
+								"signout",
 								""
 							]
 						}
