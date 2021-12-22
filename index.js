@@ -130,7 +130,7 @@ app.post("/api/signin", (request, response) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    response.json({ accessToken, refreshToken });
+    response.json({ accessToken, refreshToken, username: user.username });
   } else {
     response.status(400).json({ message: "Incorrect username or password." });
   }
@@ -152,7 +152,7 @@ app.get("/api/logout", verify, (request, response) => {
 /**
  * Refresh SignIn: Endpoint for new token when accessToken is expired
  */
-app.get("/api/refresh", (request, response) => {
+app.post("/api/refresh", (request, response) => {
   const refreshToken = request.body.refreshToken;
 
   if (!refreshToken) {
@@ -169,9 +169,11 @@ app.get("/api/refresh", (request, response) => {
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
 
-        response
-          .status(200)
-          .json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
+        response.status(200).json({
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+          username: user.username,
+        });
       }
     });
   }
@@ -181,9 +183,6 @@ app.get("/api/refresh", (request, response) => {
  * ! Start listing endpoints here
  */
 app.delete("/api/users/:userId", verify, (request, response) => {
-  console.log(request.user);
-
-  console.log(request.cookies.refreshToken);
   if (request.user.id === parseInt(request.params.userId)) {
     response.status(200).json({ message: "User has been deleted." });
   } else {
@@ -191,6 +190,10 @@ app.delete("/api/users/:userId", verify, (request, response) => {
       .status(403)
       .json({ message: "You are not allowed to delete this user." });
   }
+});
+
+app.get("/api/users/:id", verify, (request, response) => {
+  return response.status(200).json(users[0]);
 });
 
 /**
