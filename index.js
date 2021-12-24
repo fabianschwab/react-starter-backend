@@ -11,6 +11,7 @@ const users = [
   {
     id: 1001,
     username: "admin",
+    email: "admin@admin.com",
     password: "password",
   },
 ];
@@ -134,6 +135,42 @@ app.post("/api/signin", (request, response) => {
   } else {
     response.status(400).json({ message: "Incorrect username or password." });
   }
+});
+
+/**
+ * SignUp
+ */
+app.post("/api/signup", (request, response) => {
+  const { username, email, password, confirmPassword } = request.body;
+
+  if (!username || !email || !password || !confirmPassword) {
+    return response
+      .status(400)
+      .json({ message: "Not all required fields are present." });
+  }
+  const checkIfRegisteredUser = users.find((user) => {
+    if (user.email === email) {
+      return user;
+    }
+  });
+  if (checkIfRegisteredUser) {
+    return response
+      .status(409)
+      .json({ message: "User with this email address already registered." });
+  }
+
+  const checkIfUsernameTaken = users.find((user) => {
+    if (user.username === username) {
+      return user;
+    }
+  });
+  if (checkIfUsernameTaken) {
+    return response.status(409).json({ message: "Username already taken." });
+  }
+
+  users.push({ id: users.length, username, email, password });
+
+  return response.status(201).send();
 });
 
 /**
