@@ -131,7 +131,11 @@ app.post("/api/signin", (request, response) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    response.json({ accessToken, refreshToken, username: user.username });
+    response.json({
+      accessToken,
+      refreshToken,
+      user: { id: user.id, username: user.username },
+    });
   } else {
     response.status(400).json({ message: "Incorrect username or password." });
   }
@@ -168,13 +172,13 @@ app.post("/api/signup", (request, response) => {
     return response.status(409).json({ message: "Username already taken." });
   }
 
-  users.push({ id: users.length, username, email, password });
+  users.push({ id: users.length + 1001, username, email, password });
 
   return response.status(201).send();
 });
 
 /**
- * Logout and invalidate access and refresh token
+ * Logout: Invalidate access and refresh token
  */
 app.get("/api/signout", verify, (request, response) => {
   const authHeader = request.headers.authorization;
@@ -219,18 +223,27 @@ app.post("/api/refresh", (request, response) => {
 /**
  * ! Start listing endpoints here
  */
-app.delete("/api/users/:userId", verify, (request, response) => {
-  if (request.user.id === parseInt(request.params.userId)) {
-    response.status(200).json({ message: "User has been deleted." });
+app.get("/api/profile", verify, (request, response) => {
+  const foundUser = users.find((user) => {
+    return user.id === request.user.id;
+  });
+  if (foundUser) {
+    return response.status(200).json(foundUser);
   } else {
-    response
-      .status(403)
-      .json({ message: "You are not allowed to delete this user." });
+    return response.status(500).json({ message: "Something went wrong." });
   }
 });
 
-app.get("/api/users/:id", verify, (request, response) => {
-  return response.status(200).json(users[0]);
+app.get("/api/users/:userId", verify, (request, response) => {
+  const foundUser = users.find((user) => {
+    return user.id === parseInt(request.params.userId);
+  });
+  console.log(parseInt(request.params.userId));
+  if (foundUser) {
+    return response.status(200).json(foundUser);
+  } else {
+    return response.status(404).json({ message: "User not found." });
+  }
 });
 
 /**
