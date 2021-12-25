@@ -9,37 +9,18 @@
 			"name": "User Actions",
 			"item": [
 				{
-					"name": "Delete User",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/users/1001",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"users",
-								"1001"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Logout",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/signout/",
+							"raw": "{{baseUrl}}/api/logout/",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"signout",
+								"logout",
 								""
 							]
 						}
@@ -48,6 +29,24 @@
 				},
 				{
 					"name": "User Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Information To Users Id",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -98,7 +97,7 @@
 			]
 		},
 		{
-			"name": "Signin",
+			"name": "SignIn",
 			"event": [
 				{
 					"listen": "test",
@@ -132,6 +131,46 @@
 					"path": [
 						"api",
 						"signin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SignUp",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();",
+							"pm.environment.set(\"authToken\",responseData.accessToken);",
+							"pm.environment.set(\"refreshToken\",responseData.refreshToken);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"admin1\",\n    \"email\": \"admin1@admin.com\",\n    \"password\": \"password\",\n    \"confirmPassword\": \"password\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/signup",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"signup"
 					]
 				}
 			},
