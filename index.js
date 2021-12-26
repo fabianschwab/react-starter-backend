@@ -97,7 +97,7 @@ const verify = (request, response, next) => {
     const token = authHeader.split(" ")[1];
     jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
       if (error || invalidAccessToken.includes(token)) {
-        return response.status(403).json({ message: "Token is not valid." });
+        return response.status(401).json({ message: "Token is not valid." });
       } else {
         request.user = user;
         next();
@@ -200,11 +200,11 @@ app.post("/api/refresh", (request, response) => {
     return response.status(401).json({ message: "RefreshToken is missing." });
   }
   if (!checkForExistingRefreshToken(refreshToken)) {
-    return response.status(403).json({ message: "RefreshToken is not valid." });
+    return response.status(401).json({ message: "RefreshToken is not valid." });
   } else {
     jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (error, user) => {
       if (error) {
-        return response.status(403).json({ message: "Refresh token expired." });
+        return response.status(401).json({ message: "Refresh token expired." });
       } else {
         invalidateRefreshTokensOfUser(user);
         const newAccessToken = generateAccessToken(user);
